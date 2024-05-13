@@ -25,6 +25,7 @@ const (
 	TestInstance          = "test-instance"
 	TestInstanceNamespace = "test-instance-ns"
 	TestNamespace         = "test-ns"
+	TestEvent             = "test-e"
 	TestComponent         = "test-component"
 	TestApplicationName   = "test-application-name"
 	TestKey               = "test-key"
@@ -116,6 +117,24 @@ func MakeTestNamespace(ns *corev1.Namespace, opts ...namespaceOpt) *corev1.Names
 		o(ns)
 	}
 	return ns
+}
+
+type eventOpt func(*corev1.Event)
+
+func MakeTestEvent(e *corev1.Event, opts ...eventOpt) *corev1.Event {
+	if e == nil {
+		e = &corev1.Event{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      TestEvent,
+				Labels:    make(map[string]string),
+				Namespace: string,
+			},
+		}
+	}
+	for _, o := range opts {
+		o(e)
+	}
+	return e
 }
 
 type statefulSetOpt func(*appsv1.StatefulSet)
