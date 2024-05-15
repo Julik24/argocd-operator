@@ -1,101 +1,121 @@
 package notifications
 
 import (
+	"github.com/argoproj-labs/argocd-operator/api/v1alpha1"
+	argoproj "github.com/argoproj-labs/argocd-operator/api/v1beta1"
 	"github.com/argoproj-labs/argocd-operator/pkg/util"
-	routev1 "github.com/openshift/api/route/v1"
-	"testing"
-
+	"github.com/argoproj-labs/argocd-operator/tests/test"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-
-	argoproj "github.com/argoproj-labs/argocd-operator/api/v1beta1"
-	"github.com/argoproj-labs/argocd-operator/common"
-	"github.com/argoproj-labs/argocd-operator/tests/test"
+	"testing"
 )
 
-var testExpectedLabels = common.DefaultResourceLabels(test.TestArgoCDName, test.TestNamespace, common.ArgoCDNotificationsControllerComponent)
+type SchemeOpt func(*runtime.Scheme) error
 
-func makeTestNotificationsReconciler(t *testing.T, objs ...runtime.Object) *NotificationsReconciler {
+func makeTestReconcilerScheme(sOpts ...SchemeOpt) *runtime.Scheme {
 	s := scheme.Scheme
-	assert.NoError(t, routev1.Install(s))
-	assert.NoError(t, argoproj.AddToScheme(s))
+	for _, opt := range sOpts {
+		_ = opt(s)
+	}
 
-	cl := fake.NewClientBuilder().WithScheme(s).WithRuntimeObjects(objs...).Build()
+	return s
+}
+
+func makeTestReconcilerClient(sch *runtime.Scheme, resObjs, subresObjs []client.Object, runtimeObj []runtime.Object) client.Client {
+	client := fake.NewClientBuilder().WithScheme(sch)
+	if len(resObjs) > 0 {
+		client = client.WithObjects(resObjs...)
+	}
+	if len(subresObjs) > 0 {
+		client = client.WithStatusSubresource(subresObjs...)
+	}
+	if len(runtimeObj) > 0 {
+		client = client.WithRuntimeObjects(runtimeObj...)
+	}
+	return client.Build()
+}
+
+func MakeTestNotificationsReconciler(cr *argoproj.ArgoCD, objs ...client.Object) *NotificationsReconciler {
+	a := test.MakeTestNotificationsConfiguration()
+
+	resObjs := []client.Object{a}
+	subresObjs := []client.Object{a}
+	runtimeObjs := []runtime.Object{}
+	sch := makeTestReconcilerScheme(v1alpha1.AddToScheme)
+	cl := makeTestReconcilerClient(sch, resObjs, subresObjs, runtimeObjs)
 
 	return &NotificationsReconciler{
-		Client: cl,
-		Scheme: s,
-		//Instance: test.MakeTestArgoCD(nil),
+		Client:   cl,
+		Scheme:   sch,
 		Logger:   util.NewLogger("notifications-controller"),
-		Instance: test.MakeTestArgoCD(nil),
+		Instance: cr,
 	}
 }
 
 func TestNotificationsReconciler_Reconcile(t *testing.T) {
-	ns := test.MakeTestNamespace(nil)
-	resourceName = test.TestArgoCDName
 	tests := []struct {
 		name         string
 		resourceName string
-		setupClient  func() *NotificationsReconciler
+		reconciler   *NotificationsReconciler
 		wantErr      bool
 	}{
 		{
 			name:         "successful reconcile",
 			resourceName: test.TestArgoCDName,
-			setupClient: func() *NotificationsReconciler {
-				return makeTestNotificationsReconciler(t, ns)
-			},
+			reconciler: MakeTestNotificationsReconciler(
+				test.MakeTestArgoCD(nil),
+			),
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.reconciler.VarSetter()
+			err := tt.reconciler.Reconcile()
+			assert.NoError(t, err)
+			if (err != nil) != tt.wantErr {
+				if tt.wantErr {
+					t.Errorf("Expected error but did not get one")
+				} else {
+					t.Errorf("Unexpected error: %v", err)
+				}
+			}
+		})
+	}
+}
+
+func TestNotificationsReconciler_DeleteResources(t *testing.T) {
+	tests := []struct {
+		name         string
+		resourceName string
+		reconciler   *NotificationsReconciler
+		wantErr      bool
+	}{
+		{
+			name:         "successful reconcile",
+			resourceName: test.TestArgoCDName,
+			reconciler: MakeTestNotificationsReconciler(
+				test.MakeTestArgoCD(nil),
+			),
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
-		nr := tt.setupClient()
-		err := nr.Reconcile()
-		assert.NoError(t, err)
-		t.Errorf("got here"+tt.name+"%   v", err)
-		/*nr := tt.setupClient()
-		err := nr.Reconcile()
-		assert.NoError(t, err)
-		if (err != nil) != tt.wantErr {
-			if tt.wantErr {
-				t.Errorf("Expected error but did not get one")
-			} else {
-				t.Errorf("Unexpected error: %v", err)
+		t.Run(tt.name, func(t *testing.T) {
+			tt.reconciler.VarSetter()
+			err := tt.reconciler.DeleteResources()
+			assert.NoError(t, err)
+			if (err != nil) != tt.wantErr {
+				if tt.wantErr {
+					t.Errorf("Expected error but did not get one")
+				} else {
+					t.Errorf("Unexpected error: %v", err)
+				}
 			}
-		}*/
+		})
 	}
 }
-
-// func TestNotificationsReconciler_DeleteResources(t *testing.T) {
-// 	resourceName = test.TestArgoCDName
-// 	tests := []struct {
-// 		name         string
-// 		resourceName string
-// 		setupClient  func() *NotificationsReconciler
-// 		wantErr      bool
-// 	}{
-// 		{
-// 			name:         "successful delete",
-// 			resourceName: test.TestArgoCDName,
-// 			setupClient: func() *NotificationsReconciler {
-// 				return makeTestNotificationsReconciler(t)
-// 			},
-// 			wantErr: false,
-// 		},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			nr := tt.setupClient()
-// 			if err := nr.DeleteResources(); (err != nil) != tt.wantErr {
-// 				if tt.wantErr {
-// 					t.Errorf("Expected error but did not get one")
-// 				} else {
-// 					t.Errorf("Unexpected error: %v", err)
-// 				}
-// 			}
-// 		})
-// 	}
-// }

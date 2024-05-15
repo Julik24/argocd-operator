@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 
+	argoprojalpha "github.com/argoproj-labs/argocd-operator/api/v1alpha1"
 	argoproj "github.com/argoproj-labs/argocd-operator/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	cntrlClient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -127,7 +128,7 @@ func MakeTestEvent(e *corev1.Event, opts ...eventOpt) *corev1.Event {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      TestEvent,
 				Labels:    make(map[string]string),
-				Namespace: string,
+				Namespace: TestNamespace,
 			},
 		}
 	}
@@ -399,6 +400,23 @@ type serviceAccountOpt func(*corev1.ServiceAccount)
 
 func MakeTestServiceAccount(opts ...serviceAccountOpt) *corev1.ServiceAccount {
 	sa := &corev1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        TestName,
+			Namespace:   TestNamespace,
+			Labels:      make(map[string]string),
+			Annotations: make(map[string]string),
+		},
+	}
+	for _, o := range opts {
+		o(sa)
+	}
+	return sa
+}
+
+type notificationsConfigurationOpt func(configuration *argoprojalpha.NotificationsConfiguration)
+
+func MakeTestNotificationsConfiguration(opts ...notificationsConfigurationOpt) *argoprojalpha.NotificationsConfiguration {
+	sa := &argoprojalpha.NotificationsConfiguration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        TestName,
 			Namespace:   TestNamespace,

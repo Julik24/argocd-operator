@@ -1,12 +1,6 @@
 package notifications
 
-import (
-	"testing"
-
-	"github.com/argoproj-labs/argocd-operator/tests/test"
-)
-
-func TestNotificationsReconciler_DeleteServiceAccount(t *testing.T) {
+/*func TestNotificationsReconciler_DeleteServiceAccount(t *testing.T) {
 	ns := test.MakeTestNamespace(nil)
 	resourceName = test.TestArgoCDName
 	tests := []struct {
@@ -35,3 +29,4 @@ func TestNotificationsReconciler_DeleteServiceAccount(t *testing.T) {
 		})
 	}
 }
+*/

@@ -25,7 +25,7 @@ var (
 )
 
 func (nr *NotificationsReconciler) Reconcile() error {
-	nr.varSetter()
+	nr.VarSetter()
 
 	if err := nr.reconcileConfigurationCR(); err != nil {
 		nr.Logger.Error(err, "failed to reconcile configuration instance")
@@ -114,7 +114,7 @@ func (nr *NotificationsReconciler) DeleteResources() error {
 	return deletionError.ErrOrNil()
 }
 
-func (nr *NotificationsReconciler) varSetter() {
+func (nr *NotificationsReconciler) VarSetter() {
 	component = common.NotificationsControllerComponent
 	resourceName = argoutil.GenerateResourceName(nr.Instance.Name, common.NotificationsControllerSuffix)
 

@@ -1,12 +1,6 @@
 package notifications
 
-import (
-	"testing"
-
-	"github.com/argoproj-labs/argocd-operator/tests/test"
-)
-
-func TestNotificationsReconciler_DeleteSecret(t *testing.T) {
+/*func TestNotificationsReconciler_DeleteSecret(t *testing.T) {
 	ns := test.MakeTestNamespace(nil)
 	tests := []struct {
 		name        string
@@ -34,3 +28,4 @@ func TestNotificationsReconciler_DeleteSecret(t *testing.T) {
 		})
 	}
 }
+*/

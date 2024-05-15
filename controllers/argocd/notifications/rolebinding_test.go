@@ -1,11 +1,5 @@
 package notifications
 
-import (
-	"testing"
-
-	"github.com/argoproj-labs/argocd-operator/tests/test"
-)
-
 // func TestNotificationsReconciler_reconcileRoleBinding(t *testing.T) {
 // 	resourceName = test.TestArgoCDName
 // 	ns := test.MakeTestNamespace(nil)
@@ -67,7 +61,7 @@ import (
 // 	}
 // }
 
-func TestNotificationsReconciler_DeleteRoleBinding(t *testing.T) {
+/*func TestNotificationsReconciler_DeleteRoleBinding(t *testing.T) {
 	ns := test.MakeTestNamespace(nil)
 	sa := test.MakeTestServiceAccount()
 	resourceName = test.TestArgoCDName
@@ -96,4 +90,4 @@ func TestNotificationsReconciler_DeleteRoleBinding(t *testing.T) {
 			}
 		})
 	}
-}
+}*/

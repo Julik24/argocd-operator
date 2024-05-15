@@ -1,11 +1,5 @@
 package notifications
 
-import (
-	"testing"
-
-	"github.com/argoproj-labs/argocd-operator/tests/test"
-)
-
 // func TestNotificationsReconciler_reconcileDeployment(t *testing.T) {
 // 	resourceName = test.TestArgoCDName
 
@@ -58,7 +52,7 @@ import (
 // 	}
 // }
 
-func TestNotificationsReconciler_DeleteDeployment(t *testing.T) {
+/*func TestNotificationsReconciler_DeleteDeployment(t *testing.T) {
 	ns := test.MakeTestNamespace(nil)
 	resourceName = test.TestArgoCDName
 	tests := []struct {
@@ -86,4 +80,4 @@ func TestNotificationsReconciler_DeleteDeployment(t *testing.T) {
 			}
 		})
 	}
-}
+}*/

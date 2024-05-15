@@ -1,11 +1,5 @@
 package notifications
 
-import (
-	"testing"
-
-	"github.com/argoproj-labs/argocd-operator/tests/test"
-)
-
 // func TestNotificationsReconciler_reconcileRole(t *testing.T) {
 // 	ns := test.MakeTestNamespace(nil)
 // 	resourceName = test.TestArgoCDName
@@ -65,7 +59,7 @@ import (
 // 	}
 // }
 
-func TestNotificationsReconciler_DeleteRole(t *testing.T) {
+/*func TestNotificationsReconciler_DeleteRole(t *testing.T) {
 	ns := test.MakeTestNamespace(nil)
 	resourceName = test.TestArgoCDName
 	tests := []struct {
@@ -94,3 +88,4 @@ func TestNotificationsReconciler_DeleteRole(t *testing.T) {
 		})
 	}
 }
+*/

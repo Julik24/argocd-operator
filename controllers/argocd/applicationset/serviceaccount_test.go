@@ -1,9 +1,8 @@
 package applicationset
 
 import (
-	"testing"
-
 	"github.com/argoproj-labs/argocd-operator/tests/test"
+	"testing"
 )
 
 func TestApplicationSetReconciler_DeleteServiceAccount(t *testing.T) {
