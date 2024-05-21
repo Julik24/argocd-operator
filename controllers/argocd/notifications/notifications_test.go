@@ -1,12 +1,15 @@
 package notifications
 
 import (
+	"context"
 	"github.com/argoproj-labs/argocd-operator/api/v1alpha1"
 	argoproj "github.com/argoproj-labs/argocd-operator/api/v1beta1"
 	"github.com/argoproj-labs/argocd-operator/pkg/util"
 	"github.com/argoproj-labs/argocd-operator/tests/test"
 	"github.com/stretchr/testify/assert"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -42,10 +45,10 @@ func MakeTestNotificationsReconciler(cr *argoproj.ArgoCD, objs ...client.Object)
 	a := test.MakeTestNotificationsConfiguration()
 
 	resObjs := []client.Object{a}
-	subresObjs := []client.Object{a}
+	//subresObjs := []client.Object{a}
 	runtimeObjs := []runtime.Object{}
 	sch := makeTestReconcilerScheme(v1alpha1.AddToScheme)
-	cl := makeTestReconcilerClient(sch, resObjs, subresObjs, runtimeObjs)
+	cl := makeTestReconcilerClient(sch, resObjs, objs, runtimeObjs)
 
 	return &NotificationsReconciler{
 		Client:   cl,
@@ -70,6 +73,14 @@ func TestNotificationsReconciler_Reconcile(t *testing.T) {
 			),
 			wantErr: false,
 		},
+		/*{
+			name:         "not successful reconcile",
+			resourceName: test.TestArgoCDName,
+			reconciler: MakeTestNotificationsReconciler(
+				test.MakeTestArgoCD(nil),
+			),
+			wantErr: true,
+		},*/
 	}
 
 	for _, tt := range tests {
@@ -86,6 +97,88 @@ func TestNotificationsReconciler_Reconcile(t *testing.T) {
 			}
 		})
 	}
+}
+
+/*func TestNotificationsReconciler_ReconcileBad(t *testing.T) {
+	a := makeTestNotificationsConfiguration(func(a *v1alpha1.NotificationsConfiguration) {
+	})
+
+	resObjs := []client.Object{a}
+	subresObjs := []client.Object{a}
+	runtimeObjs := []runtime.Object{}
+	sch := makeTestReconcilerScheme(v1alpha1.AddToScheme)
+	cl := makeTestReconcilerClient(sch, resObjs, subresObjs, runtimeObjs)
+	r := makeTestReconciler(cl, sch)
+
+	a.Spec = v1alpha1.NotificationsConfigurationSpec{
+		// Add a default template for test
+		Templates: map[string]string{
+			"template.app-created": `email:
+			subject: Application {{.app.metadata.name}} has been created.
+		  message: Application {{.app.metadata.name}} has been created.
+		  teams:
+			title: Application {{.app.metadata.name}} has been created.`,
+		},
+		// Add a default template for test
+		Triggers: map[string]string{
+			"trigger.on-created": `- description: Application is created.
+			oncePer: app.metadata.name
+			send:
+			- app-created
+			when: "true"`,
+		},
+	}
+
+	err := r.reconcileNotificationsConfigmap(a)
+	assert.NoError(t, err)
+
+	// Verify if the ConfigMap is created
+	testCM := &corev1.ConfigMap{}
+	assert.NoError(t, r.Client.Get(
+		context.TODO(),
+		types.NamespacedName{
+			Name:      ArgoCDNotificationsConfigMap,
+			Namespace: a.Namespace,
+		},
+		testCM))
+
+	// Verify that the configmap has the default template
+	assert.NotEqual(t, testCM.Data["template.app-created"], "")
+
+	// Verify that the configmap has the default trigger
+	assert.NotEqual(t, testCM.Data["trigger.on-created"], "")
+}*/
+
+func TestReconcileNotifications_CreateRoles(t *testing.T) {
+	a := test.MakeTestArgoCD(nil)
+
+	r := MakeTestNotificationsReconciler(a)
+	err := r.reconcileRole()
+	assert.NoError(t, err)
+
+	err = r.reconcileDeployment()
+	assert.NoError(t, err)
+
+	testRole := &rbacv1.Role{}
+
+	assert.NoError(t, r.Client.Get(context.TODO(), types.NamespacedName{
+		Name:      "test-argocd",
+		Namespace: a.Namespace,
+	}, testRole))
+
+	/*desiredPolicyRules := policyRuleForNotificationsController()
+
+	assert.Equal(t, desiredPolicyRules, testRole.Rules)
+
+	a.Spec.Notifications.Enabled = false
+	_, err = r.reconcileNotificationsRole(a)
+	assert.NoError(t, err)
+
+	err = r.Client.Get(context.TODO(), types.NamespacedName{
+		Name:      generateResourceName(common.ArgoCDNotificationsControllerComponent, a),
+		Namespace: a.Namespace,
+	}, testRole)
+	assert.True(t, errors.IsNotFound(err))*/
 }
 
 func TestNotificationsReconciler_DeleteResources(t *testing.T) {
